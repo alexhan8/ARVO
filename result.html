@@ -1,0 +1,1405 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crash Table</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; margin: 20px auto; table-layout: fixed; }
+        th { border: 1px solid #ccc; padding: 8px; text-align: center; background-color: #f2f2f2; }
+        td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top;  word-wrap: break-word; white-space: pre-wrap;}
+        h1 { text-align: center; }
+    </style>
+</head>
+<body>
+<h1>Crash Analysis Results</h1>
+<table>
+<tr>
+  <th style="width:5%;">Local ID</th>
+  <th style="width:40%;">Crash Output</th>
+  <th style="width:20%;">Patch URL</th>
+  <th style="width:35%;">API Result</th>
+</tr>
+
+<tr><td>42470114</td><td>INFO: Seed: 3509742890
+INFO: Loaded 1 modules (44005 guards): [0x101cc70, 0x1047c04), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m==7==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x54a372 in xmlParserPrintFileContextInternal /src/libxml2/error.c:201:24
+    #1 0x55312c in xmlReportError /src/libxml2/error.c:406:9
+    #2 0x54cc89 in __xmlRaiseError /src/libxml2/error.c:633:2
+    #3 0x56b2f4 in xmlFatalErrMsg /src/libxml2/parser.c:574:5
+    #4 0x5eaf2e in xmlParseDocument /src/libxml2/parser.c:10949:2
+    #5 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #6 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #7 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #8 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #9 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #10 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #11 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #12 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #13 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #14 0x41f298 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f298)
+
+DEDUP_TOKEN: xmlParserPrintFileContextInternal--xmlReportError--__xmlRaiseError
+  [1m[35mUninitialized value was created by a heap allocation[1m[0m
+    #0 0x44e1d0 in malloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:953
+    #1 0x846e3d in xmlBufCreate /src/libxml2/buf.c:137:32
+    #2 0x9da702 in xmlSwitchInputEncodingInt /src/libxml2/parserInternals.c:1211:34
+    #3 0x9d97e9 in xmlSwitchToEncodingInt /src/libxml2/parserInternals.c:1287:12
+    #4 0x9d8bf3 in xmlSwitchEncoding /src/libxml2/parserInternals.c:1107:11
+    #5 0x5e9374 in xmlParseDocument /src/libxml2/parser.c:10858:6
+    #6 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #7 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #8 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #9 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #10 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #11 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #12 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #13 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #14 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreate--xmlSwitchInputEncodingInt
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/error.c:201:24 in xmlParserPrintFileContextInternal
+Unique heap origins: 101
+Stack depot allocated bytes: 10432
+Unique origin histories: 9
+History depot allocated bytes: 216
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/074180119fc90d5fd04ef9e8a5ee1910d6f9ad8e</td><td>1. Explanation of the Vulnerability:
+
+The crash log indicates a "use-of-uninitialized-value" issue detected by MemorySanitizer, a tool for detecting memory errors in C/C++ programs. This type of vulnerability occurs when a program reads memory before it has been properly initialized with a value. Using uninitialized values can lead to unpredictable behavior, crashes, and security vulnerabilities such as information leaks or enabling an attacker to influence program execution.
+
+The issue is reported in the function `xmlParserPrintFileContextInternal` within the `error.c` file of the `libxml2` library. The uninitialized value originates from a heap allocation performed by `malloc` in `xmlBufCreate`, which is called by `xmlSwitchInputEncodingInt`.
+
+2. Code Behavior or Function Responsible:
+
+The uninitialized value is created during a heap allocation (`malloc`) in `xmlBufCreate` (buf.c:137), which is a part of the `libxml2` library. The allocation is then used in the context of switching input encoding (`xmlSwitchInputEncodingInt`) in the XML parsing process (`xmlParseDocument`). The uninitialized value is eventually used in the error reporting function `xmlParserPrintFileContextInternal`, which suggests that the error handling code is trying to access or print information that has not been properly initialized.
+
+3. Likely Fix or Defensive Coding Technique:
+
+The fix for this issue would involve ensuring that all memory allocated on the heap is properly initialized before use. Here are some possible steps to address the problem:
+
+- Initialize the buffer: After allocating memory with `malloc` in `xmlBufCreate`, immediately initialize the allocated memory to a safe default value, such as zero, using `memset` or a similar function. This would prevent the use of uninitialized memory later in the program.
+
+  ```c
+  xmlBufPtr buf = (xmlBufPtr) malloc(sizeof(xmlBuf));
+  if (buf) {
+      memset(buf, 0, sizeof(xmlBuf));
+      // ... rest of the initialization code ...
+  }
+  ```
+
+- Check for proper initialization: Before using the buffer in functions like `xmlSwitchInputEncodingInt`, add checks to ensure that the buffer has been properly initialized. If not, handle the error gracefully or initialize the buffer before proceeding.
+
+- Review the encoding switch logic: There might be a logical error in `xmlSwitchInputEncodingInt` or related functions that leads to the use of uninitialized memory. Review the code to ensure that all necessary initializations are performed before the buffer is used.
+
+- Use safer memory allocation functions: Consider using safer alternatives to `malloc` that automatically initialize the allocated memory, such as `calloc`, which fills the allocated memory with zeros.
+
+- Implement comprehensive error handling: Ensure that the error reporting mechanism (`xmlReportError` and related functions) can safely handle cases where the data might be uninitialized. This could involve adding checks or using sentinel values to indicate uninitialized data.
+
+By addressing the uninitialized memory issue, the stability and security of the `libxml2` library can be improved, preventing potential crashes and exploitation by attackers.</td></tr><tr><td>42470125</td><td>INFO: Seed: 3748633341
+INFO: Loaded 1 modules (44005 guards): [0x101cc70, 0x1047c04), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m==7==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x9d6864 in xmlCurrentChar /src/libxml2/parserInternals.c:626:10
+    #1 0x59138f in xmlParsePI /src/libxml2/parser.c:5354:9
+    #2 0x5e87ed in xmlParseMisc /src/libxml2/parser.c:10797:6
+    #3 0x5e9e7b in xmlParseDocument /src/libxml2/parser.c:10908:5
+    #4 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #5 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #6 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #7 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #8 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #9 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #10 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #11 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #12 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #13 0x41f298 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f298)
+
+DEDUP_TOKEN: xmlCurrentChar--xmlParsePI--xmlParseMisc
+  [1m[35mUninitialized value was created by a heap allocation[1m[0m
+    #0 0x44e1d0 in malloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:953
+    #1 0x846e3d in xmlBufCreate /src/libxml2/buf.c:137:32
+    #2 0x9da702 in xmlSwitchInputEncodingInt /src/libxml2/parserInternals.c:1211:34
+    #3 0x9d97e9 in xmlSwitchToEncodingInt /src/libxml2/parserInternals.c:1287:12
+    #4 0x9d8bf3 in xmlSwitchEncoding /src/libxml2/parserInternals.c:1107:11
+    #5 0x5e9374 in xmlParseDocument /src/libxml2/parser.c:10858:6
+    #6 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #7 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #8 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #9 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #10 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #11 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #12 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #13 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #14 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreate--xmlSwitchInputEncodingInt
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/parserInternals.c:626:10 in xmlCurrentChar
+Unique heap origins: 131
+Stack depot allocated bytes: 14768
+Unique origin histories: 12
+History depot allocated bytes: 288
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/074180119fc90d5fd04ef9e8a5ee1910d6f9ad8e</td><td>1. Explanation of the Crash and Vulnerability:
+
+The crash log indicates that there is a use-of-uninitialized-value issue within the libxml2 library. This type of vulnerability occurs when a program reads memory before it has been initialized with a valid value. Using uninitialized values can lead to unpredictable behavior, crashes, and in some cases, security vulnerabilities such as information leaks or enabling an attacker to influence the program's execution flow.
+
+The crash occurs in the `xmlCurrentChar` function, which is part of the libxml2's internal parsing mechanism (`parserInternals.c:626`). The call stack shows that this function is invoked during the processing of a processing instruction (PI) by `xmlParsePI` and during miscellaneous parsing tasks by `xmlParseMisc`, which are part of the XML document parsing process (`xmlParseDocument`).
+
+The uninitialized value was created by a heap allocation in `xmlBufCreate` (`buf.c:137`), which is called by `xmlSwitchInputEncodingInt` (`parserInternals.c:1211`). This suggests that the buffer allocated to handle input encoding might not have been properly initialized before being used.
+
+2. Inferring Code Behavior or Function Responsible:
+
+The function `xmlBufCreate` is responsible for creating a new XML buffer, which is later used by the parser. The uninitialized value likely originates from this buffer creation process. The problem seems to be that the allocated buffer is used before being properly initialized with expected data.
+
+The `xmlSwitchInputEncodingInt` function is involved in switching the input encoding of the XML parser. This function seems to be allocating memory for the buffer but not ensuring that it is initialized before it is used in subsequent parsing functions.
+
+3. Suggested Fix or Defensive Coding Technique:
+
+To fix this issue, the code should ensure that all allocated buffers are properly initialized before use. Here are some suggested steps:
+
+- Review the `xmlBufCreate` function and any other related buffer allocation functions to ensure that they initialize the buffer to a safe default value, such as zeroing out the memory with `memset` after allocation with `malloc`.
+- In `xmlSwitchInputEncodingInt` and other functions that handle the buffer, add checks to ensure that the buffer is not used before it has been initialized with the expected data.
+- Implement additional error checking after memory allocation to ensure that if the initialization fails for any reason, the buffer is not used and an appropriate error is returned or handled.
+- Use tools like MemorySanitizer, Valgrind, or AddressSanitizer in the development process to detect and fix uses of uninitialized memory before shipping the code.
+- Consider initializing structures and buffers at the time of declaration, which can be a good defensive coding practice to prevent such issues.
+
+By applying these fixes, the vulnerability should be mitigated, and the library will be more robust against similar issues in the future.</td></tr><tr><td>42470143</td><td>INFO: Seed: 1800320361
+INFO: Loaded 1 modules   (44932 inline 8-bit counters): 44932 [0x1073f08, 0x107ee8c), 
+INFO: Loaded 1 PC tables (44932 PCs): 44932 [0xd2f170,0xdde9b0), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m[1m[31mUninitialized bytes in [1m[32m__interceptor_memcmp[1m[31m at offset 7 inside [0x7fffffffc250, 16)[1m[0m
+[1m[31m==8==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x9c87c3 in xmlParseCharEncoding /src/libxml2/encoding.c:1183:10
+    #1 0x9d0abf in xmlFindCharEncodingHandler /src/libxml2/encoding.c:1762:13
+    #2 0x9cf6e3 in xmlGetCharEncodingHandler /src/libxml2/encoding.c:1523:23
+    #3 0x9dfe05 in xmlSwitchEncoding /src/libxml2/parserInternals.c:1009:15
+    #4 0x61a6ce in xmlParseDocument /src/libxml2/parser.c:10616:6
+    #5 0x640edb in xmlDoRead /src/libxml2/parser.c:15191:5
+    #6 0x641540 in xmlReadMemory /src/libxml2/parser.c:15277:13
+    #7 0x4a2a4f in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:34:20
+    #8 0x4ecdf6 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:570:15
+    #9 0x4a6206 in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:280:6
+    #10 0x4b6c8b in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:713:9
+    #11 0x4a5331 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #12 0x7ffff6ee582f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #13 0x41f328 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f328)
+
+DEDUP_TOKEN: xmlParseCharEncoding--xmlFindCharEncodingHandler--xmlGetCharEncodingHandler
+[1m[35m  [1m[35mUninitialized value was created by an allocation of '[1m[32mupper[1m[35m' in the stack frame of function '[1m[32mxmlParseCharEncoding[1m[35m'[1m[0m
+    #0 0x9c8260 in xmlParseCharEncoding /src/libxml2/encoding.c:1151
+
+DEDUP_TOKEN: xmlParseCharEncoding
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/encoding.c:1183:10 in xmlParseCharEncoding
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/8c9daf790abfc06e8ca3a44652542c577bb67d49</td><td>1. Explanation of the Crash:
+
+The crash log indicates that there is a use-of-uninitialized-value vulnerability in the libxml2 library. This type of vulnerability occurs when a program uses a value that has not been initialized to a defined state beforehand. In this case, the uninitialized value is being used in a call to `memcmp` (as indicated by the interceptor message), which is a function that compares two blocks of memory.
+
+The crash occurred within the `xmlParseCharEncoding` function in `encoding.c` at line 1183. The uninitialized value was created in the stack frame of the same function at line 1151, and it is associated with a variable named 'upper'.
+
+This vulnerability can lead to unpredictable behavior since the uninitialized value could contain any data. Depending on what this uninitialized data represents, it could lead to incorrect program logic, crashes, or in some cases, security vulnerabilities such as information disclosure if the uninitialized data comes from previously used memory.
+
+2. Inferring the Code Behavior or Function Responsible:
+
+The function `xmlParseCharEncoding` is responsible for parsing character encoding information. The uninitialized variable 'upper' is likely meant to hold some data related to character encoding, but it was not properly initialized before being used in a comparison operation.
+
+The specific code behavior that is responsible is the failure to initialize 'upper' before it is used in a context where its value is significant. The use of this uninitialized value happens in the `memcmp` function, which is a standard library function for comparing memory regions.
+
+3. Suggesting a Likely Fix or Defensive Coding Technique:
+
+To fix this issue, ensure that the 'upper' variable is initialized before it is used. This could be done by setting it to a known value when it is declared, or by ensuring that any code paths that lead to its use first assign it a valid value.
+
+Here's a defensive coding technique that could be applied:
+
+```c
+// In encoding.c, around line 1151, where 'upper' is declared:
+int upper = 0; // Initialize to zero or an appropriate default value
+
+// ... rest of the code ...
+```
+
+Alternatively, if 'upper' is supposed to hold the result of a function call or computation, ensure that this computation is performed before 'upper' is used in any context where its value matters.
+
+It's also important to review the logic of the `xmlParseCharEncoding` function to understand why 'upper' was left uninitialized. There might be code paths that were not considered, or exceptional conditions that prevent 'upper' from being set. A thorough review and testing of all possible code paths would help ensure that all variables are properly initialized before use.
+
+In general, defensive coding techniques such as initializing variables when they are declared, avoiding the use of uninitialized variables, and using tools like static analyzers or dynamic tools like MemorySanitizer can help prevent such issues.</td></tr><tr><td>42470158</td><td>INFO: Seed: 1879389542
+INFO: Loaded 1 modules (44005 guards): [0x101cc70, 0x1047c04), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m==7==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x5eb963 in xmlParseDocument /src/libxml2/parser.c:10877:10
+    #1 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #2 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #3 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #4 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #5 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #6 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #7 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #8 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #9 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #10 0x41f298 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f298)
+
+DEDUP_TOKEN: xmlParseDocument--xmlDoRead--xmlReadMemory
+  [1m[35mUninitialized value was created by a heap allocation[1m[0m
+    #0 0x44e1d0 in malloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:953
+    #1 0x846e3d in xmlBufCreate /src/libxml2/buf.c:137:32
+    #2 0x9da702 in xmlSwitchInputEncodingInt /src/libxml2/parserInternals.c:1211:34
+    #3 0x9d97e9 in xmlSwitchToEncodingInt /src/libxml2/parserInternals.c:1287:12
+    #4 0x9d8bf3 in xmlSwitchEncoding /src/libxml2/parserInternals.c:1107:11
+    #5 0x5e9374 in xmlParseDocument /src/libxml2/parser.c:10858:6
+    #6 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #7 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #8 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #9 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #10 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #11 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #12 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #13 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #14 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreate--xmlSwitchInputEncodingInt
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/parser.c:10877:10 in xmlParseDocument
+Unique heap origins: 84
+Stack depot allocated bytes: 8032
+Unique origin histories: 8
+History depot allocated bytes: 192
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/074180119fc90d5fd04ef9e8a5ee1910d6f9ad8e</td><td>1. Explanation of the vulnerability:
+
+The crash log indicates that there is a use-of-uninitialized-value vulnerability within the libxml2 library. This type of vulnerability occurs when a program reads memory before it has been initialized with a valid value. The uninitialized memory may contain arbitrary data, which can lead to unpredictable behavior or security vulnerabilities, such as information leaks or enabling an attacker to influence program execution.
+
+The crash output shows that the MemorySanitizer tool detected the use of an uninitialized value during the execution of the `xmlParseDocument` function in `parser.c` at line 10877. The uninitialized value was created by a heap allocation that occurred in `xmlBufCreate` in `buf.c` at line 137, which was called by `xmlSwitchInputEncodingInt` in `parserInternals.c` at line 1211.
+
+2. Inferring the code behavior or function responsible:
+
+The function `xmlBufCreate` is responsible for creating a new XML buffer. It appears that this function allocates memory for the buffer, but the memory is not properly initialized before it is used in `xmlParseDocument`. The uninitialized memory is then accessed, leading to the use-of-uninitialized-value error.
+
+The `xmlSwitchInputEncodingInt` function seems to be involved in switching the input encoding of an XML document. It is possible that during the encoding switch, a buffer is allocated but not correctly initialized, or the initialization is conditional and some execution path leads to the use of an uninitialized buffer.
+
+3. Suggesting a likely fix or defensive coding technique:
+
+To fix this issue, the following steps should be taken:
+
+- Review the `xmlBufCreate` function and any other related functions to ensure that all allocated memory is properly initialized before use. This could involve explicitly setting the memory to zero using functions like `memset` after allocation or using `calloc` instead of `malloc` for allocation, as `calloc` initializes the allocated memory to zero.
+
+- Examine the control flow in `xmlSwitchInputEncodingInt` and any other functions that call `xmlBufCreate` to ensure that all code paths lead to proper initialization of the buffer.
+
+- Implement additional checks within `xmlParseDocument` and other functions that consume the buffer to ensure that they are not operating on uninitialized data. This could involve adding assertions or runtime checks for proper initialization.
+
+- Enhance the existing test suite to include tests that specifically target the initialization of buffers and the switching of input encodings. This will help catch similar issues in the future.
+
+- Consider using tools like Valgrind or AddressSanitizer in addition to MemorySanitizer during development and testing to detect uninitialized memory usage and other memory-related issues.
+
+- Adopt a secure coding standard that emphasizes the importance of initializing variables and memory before use, and perform regular code reviews to enforce this standard.</td></tr><tr><td>42470291</td><td>INFO: Seed: 1069915377
+INFO: Loaded 1 modules (44005 guards): [0x101cc70, 0x1047c04), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m==7==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x57e8ee in xmlParseSystemLiteral /src/libxml2/parser.c:4360:2
+    #1 0x587f2f in xmlParseExternalID /src/libxml2/parser.c:4829:8
+    #2 0x5c9f6c in xmlParseDocTypeDecl /src/libxml2/parser.c:8411:11
+    #3 0x5ea3ed in xmlParseDocument /src/libxml2/parser.c:10918:2
+    #4 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #5 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #6 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #7 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #8 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #9 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #10 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #11 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #12 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #13 0x41f298 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f298)
+
+DEDUP_TOKEN: xmlParseSystemLiteral--xmlParseExternalID--xmlParseDocTypeDecl
+  [1m[35mUninitialized value was stored to memory at[1m[0m
+    #0 0x44d7a5 in realloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:935
+    #1 0x84acb7 in xmlBufGrowInternal /src/libxml2/buf.c:486:23
+    #2 0x84a0ae in xmlBufGrow /src/libxml2/buf.c:515:11
+    #3 0x69968d in xmlParserInputBufferGrow /src/libxml2/xmlIO.c:3326:9
+    #4 0x9d1015 in xmlParserInputGrow /src/libxml2/parserInternals.c:324:8
+    #5 0x55c402 in xmlGROW /src/libxml2/parser.c:2089:5
+    #6 0x5e9e49 in xmlParseDocument /src/libxml2/parser.c:10907:5
+    #7 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #8 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #9 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #10 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #11 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #12 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #13 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #14 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #15 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: realloc--xmlBufGrowInternal--xmlBufGrow
+  [1m[35mUninitialized value was created by a heap allocation[1m[0m
+    #0 0x44e1d0 in malloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:953
+    #1 0x846e3d in xmlBufCreate /src/libxml2/buf.c:137:32
+    #2 0x9da702 in xmlSwitchInputEncodingInt /src/libxml2/parserInternals.c:1211:34
+    #3 0x9d97e9 in xmlSwitchToEncodingInt /src/libxml2/parserInternals.c:1287:12
+    #4 0x5bb0fb in xmlParseEncodingDecl /src/libxml2/parser.c:10567:7
+    #5 0x5e67c9 in xmlParseXMLDecl /src/libxml2/parser.c:10739:5
+    #6 0x5ea653 in xmlParseDocument /src/libxml2/parser.c:10882:2
+    #7 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #8 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #9 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #10 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #11 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #12 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #13 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #14 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #15 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreate--xmlSwitchInputEncodingInt
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/parser.c:4360:2 in xmlParseSystemLiteral
+Unique heap origins: 139
+Stack depot allocated bytes: 15568
+Unique origin histories: 15
+History depot allocated bytes: 360
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/074180119fc90d5fd04ef9e8a5ee1910d6f9ad8e</td><td>1. Explanation of the crash and vulnerability:
+
+The crash log indicates that there is a use-of-uninitialized-value vulnerability within the libxml2 library, specifically when parsing XML data. This type of vulnerability occurs when a variable is used before it has been initialized with a valid value, which can lead to unpredictable behavior or can be exploited to execute arbitrary code or cause a denial of service.
+
+From the crash output, we can see that the uninitialized value was used in the function `xmlParseSystemLiteral` at `parser.c:4360`. The call stack shows that this function was called by `xmlParseExternalID`, which in turn was called by `xmlParseDocTypeDecl`, and so on, up to the `xmlReadMemory` function. The uninitialized value was stored to memory in a `realloc` operation within `xmlBufGrowInternal` (`buf.c:486`), which was called from several other functions, including `xmlParserInputBufferGrow` and `xmlParseDocument`.
+
+The uninitialized value was originally created by a heap allocation in `malloc` called from `xmlBufCreate` (`buf.c:137`), which was used by `xmlSwitchInputEncodingInt` during the parsing of the encoding declaration.
+
+2. Inferring the code behavior or function responsible:
+
+The problem likely originates from the buffer management code, where a buffer is allocated (using `malloc` in `xmlBufCreate`) and later resized (using `realloc` in `xmlBufGrowInternal`). The uninitialized value error suggests that the buffer's contents are not properly initialized after the allocation or reallocation, and the code subsequently attempts to use this uninitialized data.
+
+3. Suggesting a likely fix or defensive coding technique:
+
+To fix this vulnerability, the following steps should be taken:
+
+- Ensure that all memory allocations and reallocations are followed by proper initialization of the allocated memory. This can be done by using functions like `calloc`, which allocates and initializes memory to zero, or by explicitly setting the memory to a known value using `memset` after allocation with `malloc` or `realloc`.
+- Review the logic in `xmlBufCreate`, `xmlBufGrowInternal`, and related functions to ensure that any new memory allocated is properly initialized before use.
+- Implement bounds checking and validation to ensure that any operations on buffers do not exceed their allocated size.
+- Use memory-safe practices such as initializing variables upon declaration and avoiding the use of uninitialized variables.
+- Incorporate static and dynamic analysis tools into the development workflow to detect use of uninitialized memory and other potential vulnerabilities before the code is deployed.
+
+Additionally, it's important to regularly update third-party libraries like libxml2 to incorporate the latest security patches and improvements.</td></tr><tr><td>42470339</td><td>INFO: Seed: 67393007
+INFO: Loaded 1 modules   (44898 inline 8-bit counters): 44898 [0xd396a8, 0xd4460a), 
+INFO: Loaded 1 PC tables (44898 PCs): 44898 [0x9bf460,0xa6ea80), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+=================================================================
+[1m[31m==7==ERROR: AddressSanitizer: heap-use-after-free on address 0x625000002a7d at pc 0x0000007b7ea5 bp 0x7ffffffe11b0 sp 0x7ffffffe11a8
+[1m[0m[1m[34mREAD of size 1 at 0x625000002a7d thread T0[1m[0m
+SCARINESS: 40 (1-byte-read-heap-use-after-free)
+    #0 0x7b7ea4 in xmlSAX2AttributeNs /src/libxml2/SAX2.c:2042:6
+    #1 0x7b644e in xmlSAX2StartElementNs /src/libxml2/SAX2.c
+    #2 0x603a30 in xmlParseStartTag2 /src/libxml2/parser.c:9583:6
+    #3 0x5ff6a9 in xmlParseElement /src/libxml2/parser.c:9928:16
+    #4 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #5 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #6 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #7 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #8 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #9 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #10 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #11 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #12 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #13 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #14 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #15 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #16 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #17 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #18 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #19 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #20 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #21 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #22 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #23 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #24 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #25 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #26 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #27 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #28 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #29 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #30 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #31 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #32 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #33 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #34 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #35 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #36 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #37 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #38 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #39 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #40 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #41 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #42 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #43 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #44 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #45 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #46 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #47 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #48 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #49 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #50 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #51 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #52 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #53 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #54 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #55 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #56 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #57 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #58 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #59 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #60 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #61 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #62 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #63 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #64 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #65 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #66 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #67 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #68 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #69 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #70 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #71 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #72 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #73 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #74 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #75 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #76 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #77 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #78 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #79 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #80 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #81 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #82 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #83 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #84 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #85 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #86 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #87 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #88 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #89 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #90 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #91 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #92 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #93 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #94 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #95 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #96 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #97 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #98 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #99 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #100 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #101 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #102 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #103 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #104 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #105 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #106 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #107 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #108 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #109 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #110 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #111 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #112 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #113 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #114 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #115 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #116 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #117 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #118 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #119 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #120 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #121 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #122 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #123 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #124 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #125 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #126 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #127 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #128 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #129 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #130 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #131 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #132 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #133 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #134 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #135 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #136 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #137 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #138 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #139 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #140 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #141 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #142 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #143 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #144 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #145 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #146 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #147 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #148 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #149 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #150 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #151 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #152 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #153 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #154 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #155 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #156 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #157 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #158 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #159 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #160 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #161 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #162 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #163 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #164 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #165 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #166 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #167 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #168 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #169 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #170 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #171 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #172 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #173 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #174 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #175 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #176 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #177 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #178 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #179 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #180 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #181 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #182 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #183 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #184 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #185 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #186 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #187 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #188 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #189 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #190 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #191 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #192 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #193 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #194 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #195 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #196 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #197 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #198 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #199 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #200 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #201 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #202 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #203 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #204 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #205 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #206 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #207 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #208 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #209 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #210 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #211 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #212 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #213 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #214 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #215 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #216 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #217 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #218 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #219 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #220 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #221 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #222 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #223 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #224 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #225 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #226 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #227 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #228 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #229 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #230 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #231 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #232 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #233 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #234 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #235 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #236 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #237 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #238 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #239 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #240 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #241 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #242 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #243 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #244 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #245 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #246 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #247 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #248 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #249 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #250 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #251 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+
+DEDUP_TOKEN: xmlSAX2AttributeNs--xmlSAX2StartElementNs--xmlParseStartTag2
+[1m[32m0x625000002a7d is located 381 bytes inside of 8194-byte region [0x625000002900,0x625000004902)
+[1m[0m[1m[35mfreed by thread T0 here:[1m[0m
+    #0 0x4ebd60 in __interceptor_free /src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:124
+    #1 0x72857a in xmlBufFree /src/libxml2/buf.c
+    #2 0x658775 in xmlFreeParserInputBuffer /src/libxml2/xmlIO.c:2479:9
+    #3 0x5c5704 in xmlHaltParser /src/libxml2/parser.c:12466:13
+    #4 0x5c50c9 in nodePush /src/libxml2/parser.c:1788:2
+    #5 0x7b5ff8 in xmlSAX2StartElementNs /src/libxml2/SAX2.c:2339:5
+    #6 0x603a30 in xmlParseStartTag2 /src/libxml2/parser.c:9583:6
+    #7 0x5ff6a9 in xmlParseElement /src/libxml2/parser.c:9928:16
+    #8 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #9 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #10 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #11 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #12 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #13 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #14 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #15 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #16 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #17 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #18 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #19 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #20 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #21 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #22 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #23 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #24 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #25 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #26 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #27 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #28 0x5fec97 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #29 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+
+DEDUP_TOKEN: __interceptor_free--xmlBufFree--xmlFreeParserInputBuffer
+[1m[35mpreviously allocated by thread T0 here:[1m[0m
+    #0 0x4ec12f in malloc /src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:146
+    #1 0x727bbf in xmlBufCreateSize /src/libxml2/buf.c:172:36
+    #2 0x658223 in xmlAllocParserInputBuffer /src/libxml2/xmlIO.c:2333:19
+    #3 0x659e5c in xmlParserInputBufferCreateMem /src/libxml2/xmlIO.c:2932:11
+    #4 0x619a31 in xmlCreateMemoryParserCtxt /src/libxml2/parser.c:14384:11
+    #5 0x5f77f5 in xmlParseBalancedChunkMemoryInternal /src/libxml2/parser.c:13367:12
+    #6 0x5f4d22 in xmlParseReference /src/libxml2/parser.c:7110:12
+    #7 0x5fe9a1 in xmlParseContent /src/libxml2/parser.c:9855:6
+    #8 0x5ffc7f in xmlParseElement /src/libxml2/parser.c:10014:5
+    #9 0x609530 in xmlParseDocument /src/libxml2/parser.c:10711:2
+    #10 0x61dd6f in xmlDoRead /src/libxml2/parser.c:15196:5
+    #11 0x53086e in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:34:20
+    #12 0x55c828 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:570:15
+    #13 0x532d0a in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:280:6
+    #14 0x53e583 in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:713:9
+    #15 0x53238c in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #16 0x7ffff6ee582f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreateSize--xmlAllocParserInputBuffer
+SUMMARY: AddressSanitizer: heap-use-after-free /src/libxml2/SAX2.c:2042:6 in xmlSAX2AttributeNs
+Shadow bytes around the buggy address:
+  0x0c4a7fff84f0: [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m
+  0x0c4a7fff8500: [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m
+  0x0c4a7fff8510: [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m
+  0x0c4a7fff8520: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8530: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+=>0x0c4a7fff8540: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m[[1m[35mfd[1m[0m]
+  0x0c4a7fff8550: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8560: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8570: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8580: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8590: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           [1m[0m00[1m[0m
+  Partially addressable: [1m[0m01[1m[0m [1m[0m02[1m[0m [1m[0m03[1m[0m [1m[0m04[1m[0m [1m[0m05[1m[0m [1m[0m06[1m[0m [1m[0m07[1m[0m 
+  Heap left redzone:       [1m[31mfa[1m[0m
+  Freed heap region:       [1m[35mfd[1m[0m
+  Stack left redzone:      [1m[31mf1[1m[0m
+  Stack mid redzone:       [1m[31mf2[1m[0m
+  Stack right redzone:     [1m[31mf3[1m[0m
+  Stack after return:      [1m[35mf5[1m[0m
+  Stack use after scope:   [1m[35mf8[1m[0m
+  Global redzone:          [1m[31mf9[1m[0m
+  Global init order:       [1m[36mf6[1m[0m
+  Poisoned by user:        [1m[34mf7[1m[0m
+  Container overflow:      [1m[34mfc[1m[0m
+  Array cookie:            [1m[31mac[1m[0m
+  Intra object redzone:    [1m[33mbb[1m[0m
+  ASan internal:           [1m[33mfe[1m[0m
+  Left alloca redzone:     [1m[34mca[1m[0m
+  Right alloca redzone:    [1m[34mcb[1m[0m
+  Shadow gap:              [1m[0mcc[1m[0m
+==7==ABORTING
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/8c9daf790abfc06e8ca3a44652542c577bb67d49</td><td>1. Explanation of the Crash:
+
+The crash log indicates a "heap-use-after-free" vulnerability, which suggests that the program attempted to read memory that had already been freed. This type of vulnerability can lead to undefined behavior, crashes, and potential security issues such as information disclosure or code execution vulnerabilities if an attacker can control the content of the freed memory.
+
+The crash occurred when reading 1 byte from the address `0x625000002a7d`. The AddressSanitizer (ASan) tool has identified that this address is within a region that was previously allocated and then freed.
+
+The stack trace shows that the read access violation occurred in the `xmlSAX2AttributeNs` function within the `SAX2.c` file at line 2042. The function `xmlSAX2AttributeNs` is part of the SAX2 parser in the libxml2 library, which is used for parsing XML documents.
+
+2. Code Behavior or Function Responsible:
+
+The stack trace indicates that the `xmlSAX2AttributeNs` function is being called as part of the XML parsing process (`xmlParseElement`, `xmlParseContent`, `xmlParseStartTag2`, etc.). The specific call to `xmlSAX2AttributeNs` that caused the crash is likely related to handling an XML attribute within a namespace.
+
+The "freed by thread" section of the log shows that the memory was freed in `xmlBufFree` (called from `xmlFreeParserInputBuffer`), which suggests that the buffer used during XML parsing was released. However, a dangling pointer to this buffer was still being used, leading to the use-after-free vulnerability.
+
+3. Suggested Fix or Defensive Coding Technique:
+
+To fix this issue, the following steps should be taken:
+
+- Review the code in `SAX2.c` around line 2042 to understand how the freed memory is being accessed. It's important to identify why the pointer to the freed memory is still being used after the memory has been released.
+
+- Ensure that any pointers to memory that has been freed are cleared (set to `NULL`) to prevent them from being used after the free operation. This can help catch use-after-free errors early by causing a more immediate and obvious crash when dereferencing a `NULL` pointer.
+
+- Implement proper lifecycle management for memory allocations. This includes pairing each allocation with a corresponding deallocation and ensuring that no references to the memory remain after it has been freed.
+
+- Use smart pointers (if available and applicable in the context of the codebase) to manage memory automatically and reduce the risk of manual memory management errors.
+
+- Consider adding additional checks before dereferencing pointers that could potentially have been freed.
+
+- Run the code through dynamic analysis tools (like ASan, which is already being used) and static analysis tools to catch similar issues during the development and testing phases.
+
+- Add regression tests that specifically target the code paths that led to the use-after-free to ensure that the issue does not reoccur in the future.
+
+In summary, the fix would involve reviewing and updating the memory management in the XML parsing functions to prevent dangling pointers from being used after their associated memory has been freed.</td></tr><tr><td>42470348</td><td>INFO: Seed: 4290135821
+INFO: Loaded 1 modules   (56276 inline 8-bit counters): 56276 [0xe948a8, 0xea247c), 
+INFO: Loaded 1 PC tables (56276 PCs): 56276 [0xabb420,0xb97160), 
+/out/xmlsec_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+=================================================================
+[1m[31m==7==ERROR: AddressSanitizer: heap-use-after-free on address 0x625000002992 at pc 0x0000004eb25d bp 0x7ffffffe12d0 sp 0x7ffffffe0a80
+[1m[0m[1m[34mREAD of size 1 at 0x625000002992 thread T0[1m[0m
+SCARINESS: 40 (1-byte-read-heap-use-after-free)
+    #0 0x4eb25c in __asan_memcpy /src/llvm/projects/compiler-rt/lib/asan/asan_interceptors_memintrinsics.cc:23
+    #1 0x80f92d in xmlStrndup /src/libxml2/xmlstring.c:50:5
+    #2 0x8a50c3 in xmlSAX2TextNode /src/libxml2/SAX2.c:1902:17
+    #3 0x8a29f4 in xmlSAX2AttributeNs /src/libxml2/SAX2.c:2065:8
+    #4 0x8a1dee in xmlSAX2StartElementNs /src/libxml2/SAX2.c
+    #5 0x6d3eb0 in xmlParseStartTag2 /src/libxml2/parser.c:9583:6
+    #6 0x6cfb29 in xmlParseElement /src/libxml2/parser.c:9928:16
+    #7 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #8 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #9 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #10 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #11 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #12 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #13 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #14 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #15 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #16 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #17 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #18 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #19 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #20 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #21 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #22 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #23 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #24 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #25 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #26 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #27 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #28 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #29 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #30 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #31 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #32 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #33 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #34 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #35 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #36 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #37 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #38 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #39 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #40 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #41 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #42 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #43 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #44 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #45 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #46 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #47 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #48 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #49 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #50 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #51 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #52 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #53 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #54 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #55 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #56 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #57 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #58 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #59 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #60 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #61 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #62 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #63 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #64 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #65 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #66 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #67 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #68 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #69 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #70 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #71 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #72 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #73 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #74 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #75 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #76 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #77 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #78 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #79 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #80 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #81 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #82 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #83 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #84 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #85 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #86 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #87 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #88 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #89 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #90 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #91 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #92 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #93 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #94 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #95 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #96 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #97 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #98 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #99 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #100 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #101 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #102 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #103 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #104 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #105 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #106 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #107 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #108 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #109 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #110 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #111 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #112 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #113 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #114 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #115 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #116 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #117 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #118 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #119 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #120 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #121 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #122 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #123 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #124 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #125 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #126 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #127 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #128 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #129 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #130 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #131 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #132 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #133 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #134 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #135 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #136 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #137 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #138 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #139 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #140 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #141 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #142 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #143 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #144 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #145 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #146 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #147 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #148 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #149 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #150 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #151 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #152 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #153 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #154 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #155 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #156 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #157 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #158 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #159 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #160 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #161 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #162 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #163 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #164 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #165 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #166 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #167 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #168 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #169 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #170 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #171 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #172 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #173 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #174 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #175 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #176 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #177 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #178 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #179 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #180 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #181 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #182 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #183 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #184 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #185 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #186 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #187 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #188 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #189 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #190 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #191 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #192 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #193 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #194 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #195 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #196 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #197 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #198 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #199 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #200 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #201 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #202 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #203 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #204 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #205 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #206 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #207 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #208 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #209 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #210 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #211 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #212 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #213 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #214 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #215 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #216 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #217 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #218 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #219 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #220 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #221 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #222 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #223 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #224 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #225 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #226 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #227 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #228 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #229 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #230 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #231 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #232 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #233 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #234 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #235 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #236 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #237 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #238 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #239 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #240 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #241 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #242 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #243 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #244 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #245 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #246 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #247 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #248 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #249 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #250 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #251 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #252 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+
+DEDUP_TOKEN: __asan_memcpy--xmlStrndup--xmlSAX2TextNode
+[1m[32m0x625000002992 is located 146 bytes inside of 8194-byte region [0x625000002900,0x625000004902)
+[1m[0m[1m[35mfreed by thread T0 here:[1m[0m
+    #0 0x4ec260 in __interceptor_free /src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:124
+    #1 0x813f1a in xmlBufFree /src/libxml2/buf.c
+    #2 0x72b265 in xmlFreeParserInputBuffer /src/libxml2/xmlIO.c:2479:9
+    #3 0x695b84 in xmlHaltParser /src/libxml2/parser.c:12466:13
+    #4 0x695549 in nodePush /src/libxml2/parser.c:1788:2
+    #5 0x8a1998 in xmlSAX2StartElementNs /src/libxml2/SAX2.c:2339:5
+    #6 0x6d3eb0 in xmlParseStartTag2 /src/libxml2/parser.c:9583:6
+    #7 0x6cfb29 in xmlParseElement /src/libxml2/parser.c:9928:16
+    #8 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #9 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #10 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #11 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #12 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #13 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #14 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #15 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #16 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #17 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #18 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #19 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #20 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #21 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #22 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #23 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #24 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #25 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #26 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #27 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #28 0x6cf117 in xmlParseContent /src/libxml2/parser.c:9846:6
+    #29 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+
+DEDUP_TOKEN: __interceptor_free--xmlBufFree--xmlFreeParserInputBuffer
+[1m[35mpreviously allocated by thread T0 here:[1m[0m
+    #0 0x4ec62f in malloc /src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:146
+    #1 0x81355f in xmlBufCreateSize /src/libxml2/buf.c:172:36
+    #2 0x72ad13 in xmlAllocParserInputBuffer /src/libxml2/xmlIO.c:2333:19
+    #3 0x72d11c in xmlParserInputBufferCreateMem /src/libxml2/xmlIO.c:2932:11
+    #4 0x6e9eb1 in xmlCreateMemoryParserCtxt /src/libxml2/parser.c:14384:11
+    #5 0x6c7c75 in xmlParseBalancedChunkMemoryInternal /src/libxml2/parser.c:13367:12
+    #6 0x6c51a2 in xmlParseReference /src/libxml2/parser.c:7110:12
+    #7 0x6cee21 in xmlParseContent /src/libxml2/parser.c:9855:6
+    #8 0x6d00ff in xmlParseElement /src/libxml2/parser.c:10014:5
+    #9 0x6d99b0 in xmlParseDocument /src/libxml2/parser.c:10711:2
+    #10 0x533f34 in xmlSecParseMemory /src/xmlsec/src/parser.c:556:11
+    #11 0x530b4c in LLVMFuzzerTestOneInput /src/xmlsec/tests/oss-fuzz/xmlsec_target.c:12:21
+    #12 0x598eb8 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:570:15
+    #13 0x56f38a in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:280:6
+    #14 0x57ac03 in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:713:9
+    #15 0x56ea0c in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #16 0x7ffff6ccb82f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreateSize--xmlAllocParserInputBuffer
+SUMMARY: AddressSanitizer: heap-use-after-free /src/llvm/projects/compiler-rt/lib/asan/asan_interceptors_memintrinsics.cc:23 in __asan_memcpy
+Shadow bytes around the buggy address:
+  0x0c4a7fff84e0: [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m
+  0x0c4a7fff84f0: [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m
+  0x0c4a7fff8500: [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m
+  0x0c4a7fff8510: [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m [1m[31mfa[1m[0m
+  0x0c4a7fff8520: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+=>0x0c4a7fff8530: [1m[35mfd[1m[0m [1m[35mfd[1m[0m[[1m[35mfd[1m[0m][1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8540: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8550: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8560: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8570: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+  0x0c4a7fff8580: [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m [1m[35mfd[1m[0m
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           [1m[0m00[1m[0m
+  Partially addressable: [1m[0m01[1m[0m [1m[0m02[1m[0m [1m[0m03[1m[0m [1m[0m04[1m[0m [1m[0m05[1m[0m [1m[0m06[1m[0m [1m[0m07[1m[0m 
+  Heap left redzone:       [1m[31mfa[1m[0m
+  Freed heap region:       [1m[35mfd[1m[0m
+  Stack left redzone:      [1m[31mf1[1m[0m
+  Stack mid redzone:       [1m[31mf2[1m[0m
+  Stack right redzone:     [1m[31mf3[1m[0m
+  Stack after return:      [1m[35mf5[1m[0m
+  Stack use after scope:   [1m[35mf8[1m[0m
+  Global redzone:          [1m[31mf9[1m[0m
+  Global init order:       [1m[36mf6[1m[0m
+  Poisoned by user:        [1m[34mf7[1m[0m
+  Container overflow:      [1m[34mfc[1m[0m
+  Array cookie:            [1m[31mac[1m[0m
+  Intra object redzone:    [1m[33mbb[1m[0m
+  ASan internal:           [1m[33mfe[1m[0m
+  Left alloca redzone:     [1m[34mca[1m[0m
+  Right alloca redzone:    [1m[34mcb[1m[0m
+  Shadow gap:              [1m[0mcc[1m[0m
+==7==ABORTING
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/8c9daf790abfc06e8ca3a44652542c577bb67d49</td><td>1. Explanation of the Crash:
+
+The crash log indicates a "heap-use-after-free" vulnerability, which means that the program attempted to read memory that had been previously freed. This type of vulnerability can lead to undefined behavior, crashes, or even security issues such as data corruption or code execution if an attacker can control the contents of the freed memory.
+
+The crash occurred when a 1-byte read operation was attempted on the address `0x625000002992`. AddressSanitizer (ASan), a memory error detector, has identified this as a use-after-free error, which is a serious issue because it means the program is accessing memory that may no longer be valid.
+
+2. Inferring the Responsible Code or Function:
+
+From the stack trace, we can see that the read operation that caused the crash was initiated by `__asan_memcpy` in `asan_interceptors_memintrinsics.cc:23`. This function is part of the ASan runtime and is intercepting a call to `memcpy`. The actual code that triggered the operation is `xmlStrndup` in `xmlstring.c:50:5`, which is attempting to duplicate a string.
+
+The `xmlStrndup` function is called by `xmlSAX2TextNode` in `SAX2.c:1902:17`, which is part of the SAX2 parser in libxml2. This suggests that the vulnerability is related to the parsing of an XML document.
+
+The memory that was accessed after being freed was originally allocated by `xmlAllocParserInputBuffer` in `xmlIO.c:2333:19` and later freed by `xmlFreeParserInputBuffer` in `xmlIO.c:2479:9`. The `xmlHaltParser` function in `parser.c:12466:13` is involved in the freeing process, which is called from `nodePush` in `parser.c:1788:2`.
+
+3. Suggesting a Fix or Defensive Coding Technique:
+
+To fix this vulnerability, we need to ensure that no references to freed memory are used after the memory has been released. Here are some steps to address the issue:
+
+- Review the logic in `xmlSAX2TextNode` and its callees to ensure that they do not hold onto pointers to memory that may be freed during XML parsing.
+- Implement proper reference counting or use smart pointers (if using C++) to manage the lifetime of dynamically allocated memory. This can help prevent premature freeing of memory that is still in use.
+- Use defensive programming techniques such as setting pointers to `NULL` after freeing the memory they point to. This can help catch attempts to use freed memory earlier in the execution.
+- Ensure that the parser state is correctly managed, especially in error conditions or when halting the parser, as this is often when resources may be incorrectly handled.
+- Run the code through dynamic analysis tools (like ASan) and static analysis tools to detect similar issues elsewhere in the codebase.
+
+In this specific case, it appears that the parser may be freeing a buffer while still holding a reference to it, or there might be a logic error in the handling of parser input buffers. The exact fix would require a closer examination of the code to understand the ownership and lifecycle of the buffers involved in XML parsing. It's also important to add more comprehensive tests that cover edge cases and error conditions to prevent such issues from occurring in the future.</td></tr><tr><td>42470541</td><td>INFO: Seed: 746084991
+INFO: Loaded 1 modules (44005 guards): [0x101cc70, 0x1047c04), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m==7==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x5e8055 in xmlParseXMLDecl /src/libxml2/parser.c:10752:13
+    #1 0x5ea653 in xmlParseDocument /src/libxml2/parser.c:10882:2
+    #2 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #3 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #4 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #5 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #6 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #7 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #8 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #9 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #10 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #11 0x41f298 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f298)
+
+DEDUP_TOKEN: xmlParseXMLDecl--xmlParseDocument--xmlDoRead
+  [1m[35mUninitialized value was created by a heap allocation[1m[0m
+    #0 0x44e1d0 in malloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:953
+    #1 0x846e3d in xmlBufCreate /src/libxml2/buf.c:137:32
+    #2 0x9da702 in xmlSwitchInputEncodingInt /src/libxml2/parserInternals.c:1211:34
+    #3 0x9d97e9 in xmlSwitchToEncodingInt /src/libxml2/parserInternals.c:1287:12
+    #4 0x5bb0fb in xmlParseEncodingDecl /src/libxml2/parser.c:10567:7
+    #5 0x5e67c9 in xmlParseXMLDecl /src/libxml2/parser.c:10739:5
+    #6 0x5ea653 in xmlParseDocument /src/libxml2/parser.c:10882:2
+    #7 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #8 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #9 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #10 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #11 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #12 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #13 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #14 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #15 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreate--xmlSwitchInputEncodingInt
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/parser.c:10752:13 in xmlParseXMLDecl
+Unique heap origins: 111
+Stack depot allocated bytes: 11200
+Unique origin histories: 10
+History depot allocated bytes: 240
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/074180119fc90d5fd04ef9e8a5ee1910d6f9ad8e</td><td>1. Explanation of the crash and vulnerability:
+
+The crash suggests that there is a use-of-uninitialized-value vulnerability within the libxml2 library, specifically when parsing XML declarations. This type of vulnerability occurs when a program reads data from an uninitialized memory location and then uses that data in a way that could affect the program's flow or output. The uninitialized value could contain any data, which might lead to unpredictable behavior, crashes, or in some cases, a security vulnerability that could be exploited by an attacker.
+
+The crash output indicates that the uninitialized value was created by a heap allocation, which means that memory was allocated on the heap (using `malloc`), but the allocated memory was not properly initialized before being used.
+
+2. Inferring the responsible code behavior or function:
+
+The crash output provides a stack trace that points to the specific functions in the libxml2 code where the uninitialized value was used and where it was created. The use occurred in `xmlParseXMLDecl` at `parser.c:10752`, which is part of the XML declaration parsing process.
+
+The creation of the uninitialized value is associated with a call to `malloc` in `xmlBufCreate` at `buf.c:137`, which is then used in `xmlSwitchInputEncodingInt` at `parserInternals.c:1211`. This suggests that the buffer created for handling the input encoding was not properly initialized after being allocated.
+
+3. Suggesting a likely fix or defensive coding technique:
+
+To fix this specific issue, the code should ensure that all memory allocated with `malloc` is initialized before being used. This can be done by:
+
+- Using `calloc` instead of `malloc`, which automatically initializes the allocated memory to zero.
+- Explicitly zeroing the memory after allocation with `malloc` by using `memset` or similar functions.
+- Ensuring that any buffers or structures are properly set up with initial values before being passed to functions that assume the memory is initialized.
+
+For a defensive coding approach, developers should:
+
+- Always initialize variables and memory before use.
+- Use memory-safe abstractions or smart pointers (in C++) that automatically handle initialization and deallocation.
+- Employ static analysis tools and dynamic analysis tools (like MemorySanitizer, AddressSanitizer, etc.) during the development process to catch such issues early.
+- Adopt a secure coding standard that emphasizes the importance of memory initialization and provides guidelines to avoid such issues.
+
+To apply a fix, the developers would need to review the code around the allocation and usage of the buffer in `xmlBufCreate` and `xmlSwitchInputEncodingInt`, ensuring that the buffer is properly initialized before any operations are performed on it. They would also need to review the logic in `xmlParseXMLDecl` to ensure that it does not operate on uninitialized data. After making the necessary changes, thorough testing and analysis should be conducted to confirm that the vulnerability has been resolved.</td></tr><tr><td>42470816</td><td>INFO: Seed: 1879496624
+INFO: Loaded 1 modules (44005 guards): [0x101cc70, 0x1047c04), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m==7==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x592892 in xmlParsePI /src/libxml2/parser.c:5353:3
+    #1 0x5d296b in xmlParseContent /src/libxml2/parser.c:10059:6
+    #2 0x5d50f0 in xmlParseElement /src/libxml2/parser.c:10256:5
+    #3 0x5eadee in xmlParseDocument /src/libxml2/parser.c:10953:2
+    #4 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #5 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #6 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #7 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #8 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #9 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #10 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #11 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #12 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #13 0x41f298 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f298)
+
+DEDUP_TOKEN: xmlParsePI--xmlParseContent--xmlParseElement
+  [1m[35mUninitialized value was stored to memory at[1m[0m
+    #0 0x44d7a5 in realloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:935
+    #1 0x84acb7 in xmlBufGrowInternal /src/libxml2/buf.c:486:23
+    #2 0x84a0ae in xmlBufGrow /src/libxml2/buf.c:515:11
+    #3 0x69968d in xmlParserInputBufferGrow /src/libxml2/xmlIO.c:3326:9
+    #4 0x9d1015 in xmlParserInputGrow /src/libxml2/parserInternals.c:324:8
+    #5 0x55c402 in xmlGROW /src/libxml2/parser.c:2089:5
+    #6 0x55fe31 in xmlParseName /src/libxml2/parser.c:3450:5
+    #7 0x5c321a in xmlParseEntityRef /src/libxml2/parser.c:7678:12
+    #8 0x619db5 in xmlParseAttValueComplex /src/libxml2/parser.c:4095:9
+    #9 0x57c146 in xmlParseAttValueInternal /src/libxml2/parser.c:9219:12
+    #10 0x61d56f in xmlParseAttribute2 /src/libxml2/parser.c:9275:15
+    #11 0x5da4f2 in xmlParseStartTag2 /src/libxml2/parser.c:9435:12
+    #12 0x5d4432 in xmlParseElement /src/libxml2/parser.c:10170:16
+    #13 0x5d31a5 in xmlParseContent /src/libxml2/parser.c:10083:6
+    #14 0x5d50f0 in xmlParseElement /src/libxml2/parser.c:10256:5
+    #15 0x5eadee in xmlParseDocument /src/libxml2/parser.c:10953:2
+    #16 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #17 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #18 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #19 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+
+DEDUP_TOKEN: realloc--xmlBufGrowInternal--xmlBufGrow
+  [1m[35mUninitialized value was created by a heap allocation[1m[0m
+    #0 0x44e1d0 in malloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:953
+    #1 0x846e3d in xmlBufCreate /src/libxml2/buf.c:137:32
+    #2 0x9da702 in xmlSwitchInputEncodingInt /src/libxml2/parserInternals.c:1211:34
+    #3 0x9d97e9 in xmlSwitchToEncodingInt /src/libxml2/parserInternals.c:1287:12
+    #4 0x5bb0fb in xmlParseEncodingDecl /src/libxml2/parser.c:10567:7
+    #5 0x5e67c9 in xmlParseXMLDecl /src/libxml2/parser.c:10739:5
+    #6 0x5ea653 in xmlParseDocument /src/libxml2/parser.c:10882:2
+    #7 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #8 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #9 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #10 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #11 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #12 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #13 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #14 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #15 0x7ffff6ee682f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreate--xmlSwitchInputEncodingInt
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/parser.c:5353:3 in xmlParsePI
+Unique heap origins: 205
+Stack depot allocated bytes: 27144
+Unique origin histories: 21
+History depot allocated bytes: 504
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/074180119fc90d5fd04ef9e8a5ee1910d6f9ad8e</td><td>1. Explanation of the crash and vulnerability:
+
+The crash log indicates that there is a use of an uninitialized value within the libxml2 library, specifically in the `xmlParsePI` function at `parser.c:5353`. This means that some memory that has not been initialized with a known value is being read and used in the program's logic. Using uninitialized memory can lead to unpredictable behavior, crashes, and in some cases, security vulnerabilities such as information leaks or enabling an attacker to influence program execution.
+
+The log also provides a trace of where the uninitialized value was stored and where it was created. The uninitialized value was stored to memory after a call to `realloc` in `xmlBufGrowInternal` (`buf.c:486`), and it was originally created by a heap allocation via `malloc` in `xmlBufCreate` (`buf.c:137`).
+
+2. Inferring the code behavior or function responsible:
+
+The uninitialized value is being used in `xmlParsePI`, which is a function for parsing processing instructions in XML. The issue seems to stem from the buffer management code, where memory is allocated (`malloc`) and resized (`realloc`) but not properly initialized before being used.
+
+3. Suggested fix or defensive coding technique:
+
+To fix this issue, the following steps should be taken:
+
+- Ensure that all memory allocated with `malloc` or resized with `realloc` is initialized before use. This can be done by using `calloc` instead of `malloc`, as `calloc` initializes the allocated memory to zero. Alternatively, after calling `malloc` or `realloc`, use `memset` to initialize the memory to a known value (e.g., zero).
+- Review the logic in `xmlBufGrowInternal` and `xmlBufCreate` to make sure that any new buffer space is properly initialized before any read operations are performed on it.
+- Implement checks to ensure that any pointer returned from `malloc`, `realloc`, or any other memory allocation function is not `NULL` before using it, to guard against memory allocation failures.
+- Use tools like MemorySanitizer, Valgrind, or AddressSanitizer during development and testing to detect uninitialized memory usage and other memory-related issues early on.
+- Consider enabling compiler warnings for uninitialized variables (e.g., `-Wuninitialized` in GCC) to catch potential issues at compile time.
+
+By following these defensive coding practices, the risk of uninitialized memory usage and related vulnerabilities can be significantly reduced.</td></tr><tr><td>42470838</td><td>INFO: Seed: 721741662
+INFO: Loaded 1 modules (44005 guards): [0x101cc70, 0x1047c04), 
+/out/libxml2_xml_read_memory_fuzzer: Running 1 inputs 1 time(s) each.
+Running: /tmp/poc
+[1m[31m==7==WARNING: MemorySanitizer: use-of-uninitialized-value
+[1m[0m    #0 0x9d3e23 in xmlNextChar /src/libxml2/parserInternals.c:526:13
+    #1 0x55e640 in xmlParseCharRef /src/libxml2/parser.c:2298:6
+    #2 0x61927b in xmlParseAttValueComplex /src/libxml2/parser.c:4066:13
+    #3 0x57c146 in xmlParseAttValueInternal /src/libxml2/parser.c:9219:12
+    #4 0x61d56f in xmlParseAttribute2 /src/libxml2/parser.c:9275:15
+    #5 0x5da4f2 in xmlParseStartTag2 /src/libxml2/parser.c:9435:12
+    #6 0x5d4432 in xmlParseElement /src/libxml2/parser.c:10170:16
+    #7 0x5d31a5 in xmlParseContent /src/libxml2/parser.c:10083:6
+    #8 0x5d50f0 in xmlParseElement /src/libxml2/parser.c:10256:5
+    #9 0x5eadee in xmlParseDocument /src/libxml2/parser.c:10953:2
+    #10 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #11 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #12 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #13 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #14 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #15 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #16 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #17 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #18 0x7fc80772782f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+    #19 0x41f298 in _start (/out/libxml2_xml_read_memory_fuzzer+0x41f298)
+
+DEDUP_TOKEN: xmlNextChar--xmlParseCharRef--xmlParseAttValueComplex
+  [1m[35mUninitialized value was stored to memory at[1m[0m
+    #0 0x44d7a5 in realloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:935
+    #1 0x84acb7 in xmlBufGrowInternal /src/libxml2/buf.c:486:23
+    #2 0x84a0ae in xmlBufGrow /src/libxml2/buf.c:515:11
+    #3 0x69968d in xmlParserInputBufferGrow /src/libxml2/xmlIO.c:3326:9
+    #4 0x9d1015 in xmlParserInputGrow /src/libxml2/parserInternals.c:324:8
+    #5 0x55c402 in xmlGROW /src/libxml2/parser.c:2089:5
+    #6 0x5e9e49 in xmlParseDocument /src/libxml2/parser.c:10907:5
+    #7 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #8 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #9 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #10 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #11 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #12 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #13 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #14 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #15 0x7fc80772782f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: realloc--xmlBufGrowInternal--xmlBufGrow
+  [1m[35mUninitialized value was created by a heap allocation[1m[0m
+    #0 0x44e1d0 in malloc /src/llvm/projects/compiler-rt/lib/msan/msan_interceptors.cc:953
+    #1 0x846e3d in xmlBufCreate /src/libxml2/buf.c:137:32
+    #2 0x9da702 in xmlSwitchInputEncodingInt /src/libxml2/parserInternals.c:1211:34
+    #3 0x9d97e9 in xmlSwitchToEncodingInt /src/libxml2/parserInternals.c:1287:12
+    #4 0x5bb0fb in xmlParseEncodingDecl /src/libxml2/parser.c:10567:7
+    #5 0x5e67c9 in xmlParseXMLDecl /src/libxml2/parser.c:10739:5
+    #6 0x5ea653 in xmlParseDocument /src/libxml2/parser.c:10882:2
+    #7 0x614047 in xmlDoRead /src/libxml2/parser.c:15432:5
+    #8 0x614742 in xmlReadMemory /src/libxml2/parser.c:15518:13
+    #9 0x498c61 in LLVMFuzzerTestOneInput /src/libxml2_xml_read_memory_fuzzer.cc:31:20
+    #10 0x4d8939 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:451:13
+    #11 0x4d9572 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long) /src/libfuzzer/FuzzerLoop.cpp:408:3
+    #12 0x49c73e in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) /src/libfuzzer/FuzzerDriver.cpp:268:6
+    #13 0x4aaf7d in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/libfuzzer/FuzzerDriver.cpp:620:9
+    #14 0x49b881 in main /src/libfuzzer/FuzzerMain.cpp:20:10
+    #15 0x7fc80772782f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2082f)
+
+DEDUP_TOKEN: malloc--xmlBufCreate--xmlSwitchInputEncodingInt
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /src/libxml2/parserInternals.c:526:13 in xmlNextChar
+Unique heap origins: 224
+Stack depot allocated bytes: 29432
+Unique origin histories: 22
+History depot allocated bytes: 528
+Exiting
+</td><td>https://gitlab.gnome.org/GNOME/libxml2/-/commit/074180119fc90d5fd04ef9e8a5ee1910d6f9ad8e</td><td>1. Explanation of the crash and vulnerability:
+
+The crash log suggests that the program is using a value that has not been initialized. This is a type of undefined behavior in C/C++, which can lead to unpredictable program behavior, including crashes and security vulnerabilities. The uninitialized value is being used in the `xmlNextChar` function, which is part of the libxml2 library, a widely used library for parsing XML documents.
+
+The use of uninitialized memory can potentially be exploited by an attacker if they can control the input that leads to the uninitialized read. This could result in information leaks (if the uninitialized memory contains sensitive data) or potentially in arbitrary code execution if the uninitialized value is used in a way that affects program control flow.
+
+2. Inferring the code behavior or function responsible:
+
+From the stack trace provided in the crash output, we can see that the uninitialized value was created by a heap allocation in `xmlBufCreate` (called by `xmlSwitchInputEncodingInt`), and later stored to memory by `realloc` in `xmlBufGrowInternal`. The uninitialized value is then used in `xmlNextChar`, which is called by a chain of functions starting with `xmlParseCharRef`.
+
+The issue seems to be related to the buffer management in libxml2, where a buffer is allocated (`malloc` in `xmlBufCreate`) and later resized (`realloc` in `xmlBufGrowInternal`), but the contents of the buffer are being used before they are properly initialized.
+
+3. Suggesting a likely fix or defensive coding technique:
+
+To fix this specific issue, the following steps could be taken:
+
+- Ensure that all memory allocations are followed by an initialization of the allocated memory. This could be done by using `calloc` instead of `malloc`, which automatically initializes the allocated memory to zero. Alternatively, after calling `malloc`, use `memset` to initialize the memory to a known value.
+- Review the logic in `xmlBufGrowInternal` and related functions to ensure that any resizing of buffers preserves the initialized state of the memory, and that any new memory allocated during resizing is also initialized before use.
+- Implement checks to ensure that any function that reads from a buffer verifies that the buffer has been properly initialized before accessing it.
+- Use static analysis tools, dynamic analysis tools (like MemorySanitizer used here), and fuzz testing to detect and prevent similar issues in the future.
+
+In general, defensive coding techniques that could help prevent such issues include:
+
+- Always initializing variables before use.
+- Using higher-level abstractions that manage memory more safely when possible.
+- Adopting coding standards that emphasize safe memory handling practices.
+- Regularly auditing and reviewing code, especially in critical libraries like libxml2, for potential security issues related to memory management.
+- Incorporating automated testing and analysis tools into the development workflow to catch issues early in the development cycle.</td></tr>
+</table>
+</body>
+</html>
