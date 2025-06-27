@@ -1,64 +1,97 @@
+# 🧠 Crash Analysis Pipeline for `libxml2` (SQLite + GPT + HTML)
 
-# Crash Analysis Automation with GPT
+This project analyzes crash data from the `libxml2` fuzzing reports stored in a SQLite database (`arvo.db`), uses GPT to explain each crash, and generates an HTML report summarizing the results.
 
-This project analyzes crash logs from a SQLite database using OpenAI's GPT model and generates an HTML report summarizing the results. It is intended for use on crash data (e.g., from the `libxml2` project) to assist in security analysis and triage.
+---
 
-## 📁 Files
+## 📁 Files Overview
 
-### `make_new_col.py`
-- Connects to `arvo.db` SQLite database.
-- Adds a new column `crash_analysis` to the `arvo` table if it does not exist.
-- Fetches up to 10 crash records for the `libxml2` project with non-null `crash_type` and `crash_output`.
-- Sends crash data to GPT-4 (`gpt-4-1106-preview`) for analysis.
-- Updates the `crash_analysis` column with the AI-generated response.
+| File              | Purpose                                                                 |
+|-------------------|-------------------------------------------------------------------------|
+| `make_new_col.py` | Adds a `crash_analysis` column to `arvo` table and populates it via GPT |
+| `generate_results.py` | Generates `result.html` to summarize crashes and AI explanations |
+| `result.html`     | Final visual report of analyzed crash entries                          |
 
-### `generate_results.py`
-- Reads the same 10 records from the `arvo` table.
-- Generates a styled HTML file `result.html` that displays:
-  - Crash ID
-  - Crash output
-  - Patch URL (if available)
-  - GPT-generated crash analysis
+---
 
-## 🧰 Requirements
+## 🛠️ Requirements
 
 - Python 3.7+
-- `openai` Python package
-- SQLite3
+- `openai` package
+- `arvo.db` SQLite database with `libxml2` crash records
 
-Install dependencies with:
-
+Install dependencies:
 ```bash
 pip install openai
 ```
 
+---
+
 ## 🔑 Setup
 
-Replace the placeholder API key in `make_new_col.py`:
+1. **API Key**:  
+   Replace the placeholder in `make_new_col.py` with your actual OpenAI key:
+   ```python
+   client = OpenAI(api_key="your_openai_api_key_here")
+   ```
 
-```python
-client = OpenAI(api_key="YOUR_API_KEY")
-```
+2. **Database File**:  
+   Ensure `arvo.db` is in the same directory as the scripts and contains a table `arvo` with columns:
+   - `localId`
+   - `project`
+   - `crash_type`
+   - `crash_output`
+   - `patch_url` (optional)
+
+---
 
 ## 🚀 Usage
 
-1. Run the crash analysis script:
-   ```bash
-   python make_new_col.py
-   ```
+### 1. Analyze Crashes
+Run GPT to generate explanations for `libxml2` crashes:
+```bash
+python make_new_col.py
+```
 
-2. Generate the HTML report:
-   ```bash
-   python generate_results.py
-   ```
+This will:
+- Create a `crash_analysis` column if it doesn't exist
+- Analyze up to 10 crash logs using GPT
+- Save explanations into the database
 
-3. Open `result.html` in a browser to view the results.
+### 2. Generate Report
+Create a styled HTML summary:
+```bash
+python generate_results.py
+```
+
+This produces `result.html`, a formatted table with:
+- Local ID
+- Crash output (truncated for readability)
+- Patch URL
+- GPT-generated analysis
+
+---
+
+## 📄 Example Output
+
+Open `result.html` in your browser to view a full summary table like this:
+
+| Local ID | Crash Output | Patch URL | GPT Crash Analysis |
+|----------|--------------|-----------|---------------------|
+| 42470114 | ...          | https://... | 1. Explanation...   |
+
+---
 
 ## ⚠️ Notes
 
-- Be sure to replace the API key and validate that `arvo.db` exists in your working directory.
-- The `LIMIT 10` clause can be adjusted for batch sizes or removed for full analysis (not recommended for large datasets without batching).
+- Crash data is filtered to only include rows where:
+  - `project = 'libxml2'`
+  - `crash_type` and `crash_output` are **not NULL**
 
-## 📄 License
+- You can adjust the `LIMIT 10` clause in both scripts to process more rows.
 
-MIT License (or specify your license)
+---
+
+## 📬 Contact
+
+For questions, reach out to the project author or file an issue.
